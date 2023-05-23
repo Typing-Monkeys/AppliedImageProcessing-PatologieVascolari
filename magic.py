@@ -2,9 +2,10 @@ import cv2
 from matplotlib import pyplot as plt
 import numpy as np
 from os import walk, sep
+import argparse
 
 
-def process(fpath: str, area_low=300, verbose=False):
+def process(fpath: str, low = 200, upper=255, verbose=False):
     img = cv2.imread(fpath)
 
     if verbose:
@@ -16,30 +17,48 @@ def process(fpath: str, area_low=300, verbose=False):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     # sogliatura e binarizzazione
-    _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
+    _, thresh = cv2.threshold(gray, low, upper, cv2.THRESH_BINARY)
 
     if verbose:
         plt.figure()
         plt.imshow(thresh, cmap='gray')
         plt.title('Thresholded Img')
+    
+    kernel = np.ones((3, 3), np.uint8)
+    eroded = cv2.erode(thresh, kernel=kernel, iterations=5)
 
     # individuo le componenti connesse 
-    totalLabels, label_ids, values, centroid = cv2.connectedComponentsWithStats(thresh)
+    totalLabels, label_ids, values, centroid = cv2.connectedComponentsWithStats(eroded)
 
     output = np.zeros(thresh.shape, dtype="uint8")
+    
+    areas = []
+
     # Loop through each component
     for i in range(1, totalLabels):
         area = values[i, cv2.CC_STAT_AREA]  
+        x, y = thresh.shape
+        xc, yc = tuple(centroid[i])
         
-        if area_low < area:
-            # Labels stores all the IDs of the components on the each pixel
-            # It has the same dimension as the threshold
-            # So we'll check the component
-            # then convert it to 255 value to mark it white
-            componentMask = (label_ids == i).astype("uint8") * 255
+        diffx = abs(x/2-xc)
+        diffy = abs(y/2-yc)
+
+        areas.append((area, i, diffx+diffy))
+
+    #max_area, id = max(areas, key=lambda x: x[0])
+    _, id, _ = min(areas, key=lambda x: x[2])
+
+        # if area_low < area:
+        #     # Labels stores all the IDs of the components on the each pixel
+        #     # It has the same dimension as the threshold
+        #     # So we'll check the component
+        #     # then convert it to 255 value to mark it white
+    componentMask = (label_ids == id).astype("uint8") * 255
             
-            # Creating the Final output mask
-            output = cv2.bitwise_or(output, componentMask)
+        #     # Creating the Final output mask
+    output = cv2.bitwise_or(output, componentMask)
+    
+    output = cv2.dilate(output, kernel=kernel, iterations=5)
             #output = cv2.circle(output, tuple(centroid[i].astype(int)), radius=0, color=(0, 0, 255), thickness=2)
     
     if verbose:
@@ -50,17 +69,29 @@ def process(fpath: str, area_low=300, verbose=False):
     return output
 
 def main(args: list[str]):
-    source_dir = args[0]
-    dest_dir = args[1]
-    area = int(args[2]) if 2 < len(args) else 300
+    parser = argparse.ArgumentParser(description='Optional app description')
+    parser.add_argument('source_dir', type=str,
+                        help='A required integer positional argument')
 
-    for (dirpath, dirnames, filenames) in walk(source_dir):
+    parser.add_argument('dest_dir', type=str,
+                        help='A required integer positional argument')
+
+    # Optional argument
+    parser.add_argument('--lower', type=int, default=200,
+                        help='An optional integer argument')
+
+    parser.add_argument('--upper', type=int, default=255,
+                        help='An optional integer argument')
+
+    args = parser.parse_args()
+
+    for (dirpath, dirnames, filenames) in walk(args.source_dir):
         for filename in filenames:
             if filename.endswith('.png'): 
                 img_full_path = sep.join([dirpath, filename]) 
-                out_img = process(img_full_path, area_low=area)
+                out_img = process(img_full_path, args.lower, args.upper)
 
-                cv2.imwrite(sep.join([dest_dir, f"MASK_{filename}"]), out_img)
+                cv2.imwrite(sep.join([args.dest_dir, f"MASK_{filename}"]), out_img)
     
 
 if __name__ == "__main__":
