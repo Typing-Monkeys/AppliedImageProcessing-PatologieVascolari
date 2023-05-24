@@ -24,7 +24,7 @@ def process(fpath: str, low = 200, upper=255, verbose=False, iter = 5, ksize=5):
         plt.imshow(thresh, cmap='gray')
         plt.title('Thresholded Img')
     
-    kernel = cv2.getStructuringElement(cv2.MARKER_CROSS, (ksize,ksize))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (ksize,ksize))
 
     thresh = cv2.medianBlur(thresh, ksize=5)
     
