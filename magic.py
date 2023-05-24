@@ -5,7 +5,7 @@ from os import walk, sep
 import argparse
 
 
-def process(fpath: str, low = 200, upper=255, verbose=False):
+def process(fpath: str, low = 200, upper=255, verbose=False, iter = 5, ksize=5):
     img = cv2.imread(fpath)
 
     if verbose:
@@ -24,8 +24,11 @@ def process(fpath: str, low = 200, upper=255, verbose=False):
         plt.imshow(thresh, cmap='gray')
         plt.title('Thresholded Img')
     
-    kernel = np.ones((3, 3), np.uint8)
-    eroded = cv2.erode(thresh, kernel=kernel, iterations=5)
+    kernel = cv2.getStructuringElement(cv2.MARKER_CROSS, (ksize,ksize))
+
+    thresh = cv2.medianBlur(thresh, ksize=5)
+    
+    eroded = cv2.erode(thresh, kernel=kernel, iterations=iter)
 
     # individuo le componenti connesse 
     totalLabels, label_ids, values, centroid = cv2.connectedComponentsWithStats(eroded)
@@ -58,7 +61,7 @@ def process(fpath: str, low = 200, upper=255, verbose=False):
         #     # Creating the Final output mask
     output = cv2.bitwise_or(output, componentMask)
     
-    output = cv2.dilate(output, kernel=kernel, iterations=5)
+    output = cv2.dilate(output, kernel=kernel, iterations=iter)
             #output = cv2.circle(output, tuple(centroid[i].astype(int)), radius=0, color=(0, 0, 255), thickness=2)
     
     if verbose:
@@ -77,19 +80,24 @@ def main(args: list[str]):
                         help='A required integer positional argument')
 
     # Optional argument
-    parser.add_argument('--lower', type=int, default=200,
+    parser.add_argument('--lower', type=int, default=190,
                         help='An optional integer argument')
 
     parser.add_argument('--upper', type=int, default=255,
                         help='An optional integer argument')
+    parser.add_argument('--iter', type=int, default=2,
+                        help='An optional integer argument')
+
+    parser.add_argument('--ksize', type=int, default=5,
+                        help='An optional integer argument')
 
     args = parser.parse_args()
 
-    for (dirpath, dirnames, filenames) in walk(args.source_dir):
+    for (dirpath, _, filenames) in walk(args.source_dir):
         for filename in filenames:
             if filename.endswith('.png'): 
                 img_full_path = sep.join([dirpath, filename]) 
-                out_img = process(img_full_path, args.lower, args.upper)
+                out_img = process(img_full_path, args.lower, args.upper, iter = args.iter, ksize=args.ksize)
 
                 cv2.imwrite(sep.join([args.dest_dir, f"MASK_{filename}"]), out_img)
     
