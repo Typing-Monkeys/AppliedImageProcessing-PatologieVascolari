@@ -8,20 +8,27 @@ def register(ref_img:str, target_img:str):
     # Open the image files.
     img1_color = cv2.imread(target_img) # Image to be aligned.
     img2_color = cv2.imread(ref_img) # Reference image.
-
     # Convert to grayscale.
     img1 = cv2.cvtColor(img1_color, cv2.COLOR_BGR2GRAY)
     img2 = cv2.cvtColor(img2_color, cv2.COLOR_BGR2GRAY)
     height, width = img2.shape
+   # _, img1 = cv2.threshold(img1, 0, , cv2.THRESH_BINARY)
 
     # Create ORB detector with 5000 features.
-    orb_detector = cv2.ORB_create(5000)
-
+    orb_detector = cv2.ORB_create(200)
     # Find keypoints and descriptors.
     # The first arg is the image, second arg is the mask
     # (which is not required in this case).
     kp1, d1 = orb_detector.detectAndCompute(img1, None)
     kp2, d2 = orb_detector.detectAndCompute(img2, None)
+
+
+    img_key1 = cv2.drawKeypoints(img1, kp1, None)
+    img_key2 = cv2.drawKeypoints(img2, kp2, None)
+
+#    cv2.imshow("img source",img_key1)
+#    cv2.imshow("img target",img_key2)
+    
 
     # Match features between the two images.
     # We create a Brute Force matcher with
@@ -31,14 +38,17 @@ def register(ref_img:str, target_img:str):
     # Match the two sets of descriptors.
     matches = matcher.match(d1, d2)
 
+   
     # Sort matches on the basis of their Hamming distance.
     #matches.sort(key = lambda x: x.distance)
     matches = sorted(matches, key = lambda x: x.distance)
-
+    
+   
     # Take the top 90 % matches forward.
-    matches = matches[:int(len(matches)*0.9)]
+    matches = matches[:int(len(matches)*0.98)]
     no_of_matches = len(matches)
-
+    
+    
     # Define empty matrices of shape no_of_matches * 2.
     p1 = np.zeros((no_of_matches, 2))
     p2 = np.zeros((no_of_matches, 2))
@@ -55,6 +65,11 @@ def register(ref_img:str, target_img:str):
     transformed_img = cv2.warpPerspective(img1_color,
                         homography, (width, height))
 
+    matches_key = cv2.drawMatches(img1, kp1, img2, kp2, matches[:15], None)
+    cv2.imshow("matchese",matches_key)
+    cv2.imshow("registered",transformed_img)
+
+    cv2.waitKey(0)
     return transformed_img
 
 
