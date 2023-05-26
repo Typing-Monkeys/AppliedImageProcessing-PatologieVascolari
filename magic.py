@@ -63,7 +63,6 @@ def process(fpath: str, low=200, upper=255, verbose=False, iter=5, ksize=5):
     output = cv2.bitwise_or(output, componentMask)
 
     output = cv2.dilate(output, kernel=kernel, iterations=iter)
-    # output = cv2.circle(output, tuple(centroid[i].astype(int)), radius=0, color=(0, 0, 255), thickness=2)
 
     if verbose:
         plt.figure()
