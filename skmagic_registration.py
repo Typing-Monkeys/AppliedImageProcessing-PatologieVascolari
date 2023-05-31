@@ -1,54 +1,60 @@
-from matplotlib import pyplot as plt
 from pystackreg import StackReg
 from skimage import io
-# import numpy as np
+import argparse
+import numpy as np
+from os import walk, sep
+import cv2
 
-# load reference and "moved" image
-ref = io.imread('./P27/P2707758/BASALE_crop/BASALE_crop0000.png')
-mov = io.imread('./P27/P2707758/MDC_crop/MDC_crop0000.png')
 
-# Translational transformation
-sr = StackReg(StackReg.TRANSLATION)
-out_tra = sr.register_transform(ref, mov)
-out_tra = out_tra / out_tra.max()  # va normalizzata per essere salvata
+def register(ref_path: str, mov_path: str) -> np.ndarray:
+    ref = io.imread(ref_path)
+    mov = io.imread(mov_path)
 
-plt.imshow(out_tra, cmap='gray')
-io.imsave('./traslation.png', out_tra, plugin='pil')
-# plt.savefig('./traslation.png')
-plt.show()
+    sr = StackReg(StackReg.TRANSLATION)
+    out_tra = sr.register_transform(ref, mov)
 
-# Rigid Body transformation
-sr = StackReg(StackReg.RIGID_BODY)
-out_rot = sr.register_transform(ref, mov)
-out_rot = out_rot / out_rot.max()  # va normalizzata per essere salvata
+    return out_tra
 
-plt.imshow(out_rot, cmap='gray')
-io.imsave('./rigidbody.png', out_rot, plugin='pil')
-plt.show()
 
-# Scaled Rotation transformation
-sr = StackReg(StackReg.SCALED_ROTATION)
-out_sca = sr.register_transform(ref, mov)
-out_sca = out_sca / out_sca.max()  # va normalizzata per essere salvata
+def main():
+    parser = argparse.ArgumentParser(description='Optional app description')
+    parser.add_argument('ref_dir',
+                        type=str,
+                        help='A required integer positional argument')
 
-plt.imshow(out_sca, cmap='gray')
-io.imsave('./scalerotate.png', out_sca, plugin='pil')
-plt.show()
+    parser.add_argument('target_dir',
+                        type=str,
+                        help='A required integer positional argument')
 
-# Affine transformation
-sr = StackReg(StackReg.AFFINE)
-out_aff = sr.register_transform(ref, mov)
-out_aff = out_aff / out_aff.max()  # va normalizzata per essere salvata
+    parser.add_argument('dest_dir',
+                        type=str,
+                        help='A required integer positional argument')
+    args = parser.parse_args()
 
-plt.imshow(out_aff, cmap='gray')
-io.imsave('./affine.png', out_aff, plugin='pil')
-plt.show()
+    ref_list = []
+    target_list = []
 
-# Bilinear transformation
-sr = StackReg(StackReg.BILINEAR)
-out_bil = sr.register_transform(ref, mov)
-out_bil = out_bil / out_bil.max()  # va normalizzata per essere salvata
+    for (dirpath, _, filenames) in walk(args.ref_dir):
+        for filename in filenames:
+            if filename.endswith('.png'):
+                img_full_path = sep.join([dirpath, filename])
+                ref_list.append(img_full_path)
 
-plt.imshow(out_bil, cmap='gray')
-io.imsave('./bilateral.png', out_bil, plugin='pil')
-plt.show()
+    for (dirpath, _, filenames) in walk(args.target_dir):
+        for filename in filenames:
+            if filename.endswith('.png'):
+                img_full_path = sep.join([dirpath, filename])
+                target_list.append(img_full_path)
+
+    ref_list.sort(
+        key=lambda x: int(x.split('.')[0].split(sep)[-1].split('_')[1]))
+    target_list.sort(
+        key=lambda x: int(x.split('.')[0].split(sep)[-1].split('_')[1]))
+
+    for i in range(len(ref_list)):
+        out_img = register(ref_list[i], target_list[i])
+        cv2.imwrite(sep.join([args.dest_dir, f"REGISTERED_{i}.png"]), out_img)
+
+
+if __name__ == "__main__":
+    main()
