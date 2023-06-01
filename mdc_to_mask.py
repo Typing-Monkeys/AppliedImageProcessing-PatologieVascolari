@@ -52,11 +52,10 @@ def process(fpath: str, low=200, upper=255, verbose=False, iter=5, ksize=5):
     # max_area, id = max(areas, key=lambda x: x[0])
     _, id, _ = min(areas, key=lambda x: x[2])
 
-    # if area_low < area:
-    #     # Labels stores all the IDs of the components on the each pixel
-    #     # It has the same dimension as the threshold
-    #     # So we'll check the component
-    #     # then convert it to 255 value to mark it white
+    # Labels stores all the IDs of the components on the each pixel
+    # It has the same dimension as the threshold
+    # So we'll check the component
+    # then convert it to 255 value to mark it white
     componentMask = (label_ids == id).astype("uint8") * 255
 
     #     # Creating the Final output mask
@@ -72,35 +71,32 @@ def process(fpath: str, low=200, upper=255, verbose=False, iter=5, ksize=5):
     return output
 
 
-def main(args: list[str]):
-    parser = argparse.ArgumentParser(description='Optional app description')
-    parser.add_argument('source_dir',
-                        type=str,
-                        help='A required integer positional argument')
+def main():
+    parser = argparse.ArgumentParser(
+        description='Generate Mask from MDC images')
+    parser.add_argument('source_dir', type=str, help='Original MDC images')
 
     parser.add_argument('dest_dir',
                         type=str,
-                        help='A required integer positional argument')
+                        help='Folder where to store final results')
 
     # Optional argument
     parser.add_argument('--lower',
                         type=int,
                         default=190,
-                        help='An optional integer argument')
+                        help='Color lower bound')
 
     parser.add_argument('--upper',
                         type=int,
                         default=255,
-                        help='An optional integer argument')
-    parser.add_argument('--iter',
-                        type=int,
-                        default=2,
-                        help='An optional integer argument')
+                        help='Color upper bound')
+    parser.add_argument(
+        '--iter',
+        type=int,
+        default=2,
+        help='Number of times the OPENING operation is applied')
 
-    parser.add_argument('--ksize',
-                        type=int,
-                        default=5,
-                        help='An optional integer argument')
+    parser.add_argument('--ksize', type=int, default=5, help='Kernel size')
 
     args = parser.parse_args()
 
@@ -119,6 +115,4 @@ def main(args: list[str]):
 
 
 if __name__ == "__main__":
-    from sys import argv
-
-    main(argv[1:])
+    main()

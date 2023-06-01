@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import argparse
 from os import walk, sep

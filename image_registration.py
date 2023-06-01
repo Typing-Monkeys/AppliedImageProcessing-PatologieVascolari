@@ -17,18 +17,14 @@ def register(ref_path: str, mov_path: str) -> np.ndarray:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Optional app description')
-    parser.add_argument('ref_dir',
-                        type=str,
-                        help='A required integer positional argument')
+    parser = argparse.ArgumentParser(description='Auto Image Registration')
+    parser.add_argument('ref_dir', type=str, help='Ref images dir')
 
-    parser.add_argument('target_dir',
-                        type=str,
-                        help='A required integer positional argument')
+    parser.add_argument('target_dir', type=str, help='Target images dir')
 
     parser.add_argument('dest_dir',
                         type=str,
-                        help='A required integer positional argument')
+                        help='Folder where to store final results')
     args = parser.parse_args()
 
     ref_list = []
