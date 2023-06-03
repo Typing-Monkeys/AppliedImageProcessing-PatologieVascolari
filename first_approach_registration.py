@@ -22,12 +22,6 @@ def register(ref_img: str, target_img: str):
     kp1, d1 = orb_detector.detectAndCompute(img1, None)
     kp2, d2 = orb_detector.detectAndCompute(img2, None)
 
-    img_key1 = cv2.drawKeypoints(img1, kp1, None)
-    img_key2 = cv2.drawKeypoints(img2, kp2, None)
-
-    #    cv2.imshow("img source",img_key1)
-    #    cv2.imshow("img target",img_key2)
-
     # Match features between the two images.
     # We create a Brute Force matcher with
     # Hamming distance as measurement mode.
