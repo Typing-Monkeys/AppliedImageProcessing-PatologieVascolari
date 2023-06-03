@@ -40,7 +40,7 @@ def make_charts(data_path: str, dest_path: str):
     for name, df in dfs.items():
         t = df.iloc[:, 1:]
         colors = itertools.cycle(palette)
-        p = figure(x_range=t['Filename'])
+        p = figure(x_range=t['Filename'], y_range=(-1, 1.5))
         p.title = name
 
         for feat, color in zip(t.iloc[:, 1:], colors):
