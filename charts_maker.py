@@ -30,7 +30,7 @@ def _calculate_data_for_plots(dfs: dict[str, pd.DataFrame],
 
 def make_charts(data_path: str, dest_path: str):
     dfs = {}
-    for (dirpath, dirname, filenames) in walk(data_path):
+    for (dirpath, _, filenames) in walk(data_path):
         for filename in filenames:
             if filename == "metrics.csv":
                 name = dirpath.split(sep)[-1]
@@ -127,13 +127,14 @@ def main():
         SAVE_FN = export_png
         SAVE_EXT = "png"
 
-    for (dirpath, dirnames, filenames) in walk(args.source_dir):
-        for dirname in dirnames:
-            dest_dir = sep.join([args.dest_dir, dirname])
-            makedirs(dest_dir, exist_ok=True)
+    # take the first yeld element from the generator
+    # because I only need folders of depth 1 (source_dir subdirs)
+    dirpath, dirnames, _ = next(walk(args.source_dir))
+    for dirname in dirnames:
+        dest_dir = sep.join([args.dest_dir, dirname])
+        makedirs(dest_dir, exist_ok=True)
 
-            make_charts(sep.join([dirpath, dirname]), dest_dir)
-        break
+        make_charts(sep.join([dirpath, dirname]), dest_dir)
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ def main():
     args = parser.parse_args()
 
     dfs = {}
-    for (dirpath, dirname, filenames) in walk(args.source_dir):
+    for (dirpath, _, filenames) in walk(args.source_dir):
         for filename in filenames:
             if filename == "metrics.csv":
                 name = dirpath.split(sep)[-1]
