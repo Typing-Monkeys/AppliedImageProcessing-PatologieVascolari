@@ -127,7 +127,7 @@ def main():
         SAVE_FN = export_png
         SAVE_EXT = "png"
 
-    # take the first yeld element from the generator
+    # take the first element from the generator
     # because I only need folders of depth 1 (source_dir subdirs)
     dirpath, dirnames, _ = next(walk(args.source_dir))
     for dirname in dirnames:
